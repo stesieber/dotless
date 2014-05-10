@@ -29,10 +29,15 @@ namespace dotless.Core.Parser.Tree
                 throw new ArgumentNullException("env");
             }
 
-            var args = Arguments.Select(a => a.Evaluate(env));
+			if (env.UseStrictMath)
+			{
+				Arguments.Accept(new SuppressOperationEvaluationVisitor());
+			}
+
+	        var args = Arguments.Select(a => a.Evaluate(env));
 
             var function = env.GetFunction(Name);
-
+			
             if (function != null)
             {
                 function.Name = Name;
@@ -57,5 +62,51 @@ namespace dotless.Core.Parser.Tree
         {
             Arguments = VisitAndReplace(Arguments, visitor);
         }
+
+	    private class SuppressOperationEvaluationVisitor : IVisitor
+	    {
+		    public Node Visit(Node node)
+		    {
+			    Node result = node;
+
+				Operation op = node as Operation;
+				if (op != null)
+				{
+					return new OperationWithSuppressedEvaluation(op);
+				}
+
+				result.Accept(this);
+
+				return result;
+		    }
+	    }
+
+	    private class OperationWithSuppressedEvaluation : Node
+	    {
+		    private readonly Operation _wrappedOperation;
+
+		    public OperationWithSuppressedEvaluation(Operation wrappedOperation)
+		    {
+			    _wrappedOperation = wrappedOperation;
+		    }
+
+		    public override Node Evaluate(Env env)
+		    {
+				//skipping real evaluation
+			    return this;
+		    }
+
+		    public override void AppendCSS(Env env)
+		    {
+				_wrappedOperation.First.AppendCSS(env);
+				env.Output.Append(" " + _wrappedOperation.Operator + " ");
+				_wrappedOperation.Second.AppendCSS(env);
+		    }
+
+		    public override void Accept(IVisitor visitor)
+		    {
+			    _wrappedOperation.Accept(visitor);
+		    }
+	    }
     }
 }

@@ -1,3 +1,5 @@
+using dotless.Core.Parser.Infrastructure;
+
 namespace dotless.Test.Specs
 {
     using NUnit.Framework;
@@ -407,6 +409,7 @@ a ~ p {
         [Test]
         public void MultipleBackgroundProperty()
         {
+
             var input =
                 @"
 .class {
@@ -453,6 +456,21 @@ a ~ p {
 ";
             AssertLess(input, expected);
         }
+
+
+		[Test]
+		public void Calc()
+		{
+			DefaultEnv = () => new Env { UseStrictMath = true };
+
+
+			var input = @"
+.myclass {
+  width: calc(100% - 20px);
+}";
+
+			AssertLessUnchanged(input);
+		}
 
 #if CSS3EXPERIMENTAL
         [Test]

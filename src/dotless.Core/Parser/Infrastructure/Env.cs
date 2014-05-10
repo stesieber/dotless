@@ -28,6 +28,7 @@
         public bool DisableColorCompression { get; set; }
         public bool KeepFirstSpecialComment { get; set; }
         public bool IsFirstSpecialCommentOutput { get; set; }
+		public bool UseStrictMath { get; set; }
 
         public Env() : this(null, null)
         {
